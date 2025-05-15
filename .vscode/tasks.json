@@ -1,0 +1,42 @@
+{
+     "tasks": [
+          {
+               "type": "cppbuild",
+               "label": "C/C++: cl.exe build active file",
+               "command": "cl.exe",
+               "args": [
+                    "/Zi", // Generate debugging information (.pdb file)
+                    "/EHsc", // Enable standard exception handling
+                    "/nologo", // Suppress compiler startup banner
+                    "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe", // Specify output executable
+                    "${file}" // Input source file
+               ],
+               "options": {
+                    "cwd": "${fileDirname}"
+               },
+               "problemMatcher": [
+                    "$msCompile"
+               ],
+               "group": {
+                    "kind": "build",
+                    "isDefault": true
+               },
+               "detail": "Task modified to generate all intermediary and debugging files."
+          },
+          {
+               "label": "Clean Intermediate Files",
+               "type": "shell",
+               "command": "cmd",
+               "args": [
+                    "/c",
+                    "del",
+                    "${fileDirname}\\*.obj",
+                    "${fileDirname}\\*.pdb",
+                    "${fileDirname}\\*.ilk"
+               ],
+               "problemMatcher": [],
+               "group": "build"
+          }
+     ],
+     "version": "2.0.0"
+}
