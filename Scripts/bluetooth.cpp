@@ -6,10 +6,11 @@ using namespace std;
 
 #pragma comment(lib, "Bthprops.lib")
 
-bool ToogleBluetooth()
+// Function to check if Bluetooth is enabled and return both the status and handle
+HANDLE IsBluetoothEnabled()
 {
      // Initialize a generic Windows system handle
-     HANDLE hBluetooth;
+     HANDLE hBluetooth = NULL;
 
      // Initialize a struct to hold Bluetooth radio information with its proper size
      BLUETOOTH_FIND_RADIO_PARAMS btfrp = {sizeof(BLUETOOTH_FIND_RADIO_PARAMS)};
@@ -20,20 +21,28 @@ bool ToogleBluetooth()
      // Check if a Bluetooth radio was found
      if (hFind == NULL)
      {
-          cout << "No Bluetooth radio found." << endl;
-          return false;
-     }
-     else
-     {
-          cout << "Bluetooth radio found." << endl;
+          cout << "Bluetooth is disabled." << endl;
+          return NULL;
      }
 
-     return true;
+     cout << "Bluetooth is enabled." << endl;
+     return hBluetooth;
 }
 
 int main()
 {
-     ToogleBluetooth();
+     HANDLE hBluetooth = IsBluetoothEnabled();
+
+     // Finish program if Bluetooth is not enabled
+     if (hBluetooth == NULL)
+     {
+          cout << "Exiting program." << endl;
+          return 1;
+     }
+     else
+     {
+          cout << "Bluetooth is enabled." << endl;
+     }
 
      Sleep(2000); // Sleep for 2 seconds
 }
