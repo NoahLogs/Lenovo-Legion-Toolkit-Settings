@@ -29,6 +29,35 @@ HANDLE IsBluetoothEnabled()
      return hBluetooth;
 }
 
+bool CheckConnectedBluetoothDevices(HANDLE hBluetooth)
+{
+     // Initialize a struct to hold Bluetooth device search parameters with its proper size
+     BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams = {sizeof(BLUETOOTH_DEVICE_SEARCH_PARAMS)};
+
+     // Set the search parameters for Bluetooth devices, including what status devices to return
+     searchParams.hRadio = hBluetooth;
+     searchParams.fReturnConnected = TRUE;
+     searchParams.fReturnAuthenticated = TRUE;
+     searchParams.fReturnRemembered = FALSE;
+     searchParams.fReturnUnknown = FALSE;
+     searchParams.fIssueInquiry = FALSE;
+
+     // Retrieve the first connected Bluetooth device
+     BLUETOOTH_DEVICE_INFO deviceInfo = {sizeof(BLUETOOTH_DEVICE_INFO)};
+     HBLUETOOTH_DEVICE_FIND hDeviceFind = BluetoothFindFirstDevice(&searchParams, &deviceInfo);
+
+     BluetoothFindDeviceClose(hDeviceFind);
+
+     if (hDeviceFind == NULL)
+     {
+          cout << "No connected Bluetooth devices found." << endl;
+          return false;
+     }
+
+     cout << "Connected Bluetooth device found" << endl;
+     return true;
+}
+
 int main()
 {
      HANDLE hBluetooth = IsBluetoothEnabled();
@@ -39,10 +68,17 @@ int main()
           cout << "Exiting program." << endl;
           return 1;
      }
+
+     if (CheckConnectedBluetoothDevices(hBluetooth))
+     {
+          cout << "Connected Bluetooth devices found." << endl;
+     }
      else
      {
-          cout << "Bluetooth is enabled." << endl;
+          cout << "No connected Bluetooth devices found." << endl;
      }
+
+     CloseHandle(hBluetooth);
 
      Sleep(2000); // Sleep for 2 seconds
 }
