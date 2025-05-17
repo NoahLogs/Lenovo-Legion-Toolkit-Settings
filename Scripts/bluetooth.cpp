@@ -9,46 +9,42 @@ using namespace std;
 
 HANDLE IsBluetoothEnabled()
 {
-     // Initialize a generic Windows system handle
-     HANDLE hBluetooth = NULL;
+     // Look for the Bluetooth radio device
+     HANDLE handle_bluetooth = NULL;
+     BLUETOOTH_FIND_RADIO_PARAMS radio_finder_params = {sizeof(BLUETOOTH_FIND_RADIO_PARAMS)};
+     HBLUETOOTH_RADIO_FIND handle_finder = BluetoothFindFirstRadio(&radio_finder_params, &handle_bluetooth);
 
-     // Initialize a struct to hold Bluetooth radio information with its proper size
-     BLUETOOTH_FIND_RADIO_PARAMS btfrp = {sizeof(BLUETOOTH_FIND_RADIO_PARAMS)};
-
-     // Look for the first Bluetooth radio device and store its handle in hBluetooth
-     HBLUETOOTH_RADIO_FIND hFind = BluetoothFindFirstRadio(&btfrp, &hBluetooth);
-
-     // Check if a Bluetooth radio was found
-     if (hFind == NULL)
+     // Validate if a radio device was found
+     if (handle_finder == NULL)
      {
           cout << "Bluetooth is disabled." << endl;
           return NULL;
      }
 
      cout << "Bluetooth is enabled." << endl;
-     return hBluetooth;
+     return handle_bluetooth;
 }
 
-bool CheckConnectedBluetoothDevices(HANDLE hBluetooth)
+bool CheckConnectedBluetoothDevices(HANDLE handle_bluetooth)
 {
-     // Initialize a struct to hold Bluetooth device search parameters with its proper size
-     BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams = {sizeof(BLUETOOTH_DEVICE_SEARCH_PARAMS)};
+     // Set the search parameters for Bluetooth devices
+     BLUETOOTH_DEVICE_SEARCH_PARAMS search_params = {sizeof(BLUETOOTH_DEVICE_SEARCH_PARAMS)};
 
-     // Set the search parameters for Bluetooth devices, including what status devices to return
-     searchParams.hRadio = hBluetooth;
-     searchParams.fReturnConnected = TRUE;
-     searchParams.fReturnAuthenticated = FALSE;
-     searchParams.fReturnRemembered = FALSE;
-     searchParams.fReturnUnknown = FALSE;
-     searchParams.fIssueInquiry = FALSE;
+     search_params.hRadio = handle_bluetooth;
+     search_params.fReturnConnected = TRUE;
+     search_params.fReturnAuthenticated = FALSE;
+     search_params.fReturnRemembered = FALSE;
+     search_params.fReturnUnknown = FALSE;
+     search_params.fIssueInquiry = FALSE;
 
      // Retrieve the first connected Bluetooth device
-     BLUETOOTH_DEVICE_INFO deviceInfo = {sizeof(BLUETOOTH_DEVICE_INFO)};
-     HBLUETOOTH_DEVICE_FIND hDeviceFind = BluetoothFindFirstDevice(&searchParams, &deviceInfo);
+     BLUETOOTH_DEVICE_INFO device_info = {sizeof(BLUETOOTH_DEVICE_INFO)};
+     HBLUETOOTH_DEVICE_FIND device_finder = BluetoothFindFirstDevice(&search_params, &device_info);
 
      // Validate if at least one connected Bluetooth device was found
-     BluetoothFindDeviceClose(hDeviceFind);
-     if (hDeviceFind == NULL)
+     BluetoothFindDeviceClose(device_finder);
+
+     if (device_finder == NULL)
      {
           cout << "No connected Bluetooth devices found." << endl;
           return false;
@@ -60,94 +56,84 @@ bool CheckConnectedBluetoothDevices(HANDLE hBluetooth)
 
 void ToogleBluetooth()
 {
+     // Press and realese Windows key + A key
      INPUT submenu_inputs[4] = {0};
 
-     // Press Windows key
      submenu_inputs[0].type = INPUT_KEYBOARD;
      submenu_inputs[0].ki.wVk = VK_LWIN;
 
-     // Press A key
      submenu_inputs[1].type = INPUT_KEYBOARD;
      submenu_inputs[1].ki.wVk = 'A';
 
-     // Release A key
      submenu_inputs[2].type = INPUT_KEYBOARD;
      submenu_inputs[2].ki.wVk = 'A';
      submenu_inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
 
-     // Release Windows key
      submenu_inputs[3].type = INPUT_KEYBOARD;
      submenu_inputs[3].ki.wVk = VK_LWIN;
      submenu_inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
 
-     // Send the inputs
      SendInput(ARRAYSIZE(submenu_inputs), submenu_inputs, sizeof(INPUT));
 
      Sleep(1000);
 
+     // Press and realese right arrow key
      INPUT movement_inputs[2] = {0};
 
-     // Press left arrow key
      movement_inputs[0].type = INPUT_KEYBOARD;
      movement_inputs[0].ki.wVk = VK_RIGHT;
 
-     // Release left arrow key
      movement_inputs[1].type = INPUT_KEYBOARD;
      movement_inputs[1].ki.wVk = VK_RIGHT;
      movement_inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
 
      SendInput(ARRAYSIZE(movement_inputs), movement_inputs, sizeof(INPUT));
 
+     // Press and release Enter key
      INPUT enter_inputs[2] = {0};
 
-     // Press Enter key
      enter_inputs[0].type = INPUT_KEYBOARD;
      enter_inputs[0].ki.wVk = VK_RETURN;
 
-     // Release Enter key
      enter_inputs[1].type = INPUT_KEYBOARD;
      enter_inputs[1].ki.wVk = VK_RETURN;
      enter_inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
 
-     // Send the inputs
      SendInput(ARRAYSIZE(enter_inputs), enter_inputs, sizeof(INPUT));
 
      Sleep(1000);
 
+     // Press and release Escape key
      INPUT close_submenu_inputs[2] = {0};
 
-     // Press Escape key
      close_submenu_inputs[0].type = INPUT_KEYBOARD;
      close_submenu_inputs[0].ki.wVk = VK_ESCAPE;
 
-     // Release Escape key
      close_submenu_inputs[1].type = INPUT_KEYBOARD;
      close_submenu_inputs[1].ki.wVk = VK_ESCAPE;
      close_submenu_inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
 
-     // Send the inputs
      SendInput(ARRAYSIZE(close_submenu_inputs), close_submenu_inputs, sizeof(INPUT));
 }
 
 int main()
 {
-     HANDLE hBluetooth = IsBluetoothEnabled();
+     HANDLE handle_bluetooth = IsBluetoothEnabled();
 
-     // Finish program if Bluetooth is not enabled
-     if (hBluetooth == NULL)
+     if (handle_bluetooth == NULL)
      {
           cout << "Exiting program." << endl;
           return 1;
      }
 
-     if (CheckConnectedBluetoothDevices(hBluetooth) == false)
+     if (CheckConnectedBluetoothDevices(handle_bluetooth) == false)
      {
           cout << "No connected Bluetooth devices found. Exiting program." << endl;
           ToogleBluetooth();
           return 1;
      };
 
-     CloseHandle(hBluetooth);
+     CloseHandle(handle_bluetooth);
 
      Sleep(2000);
 }
