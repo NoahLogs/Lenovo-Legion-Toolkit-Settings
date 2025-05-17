@@ -1,11 +1,14 @@
 #include <windows.h>
 #include <bluetoothapis.h>
 #include <iostream>
+#include <cstring>
 
 using namespace std;
 
 #pragma comment(lib, "Bthprops.lib")
 #pragma comment(lib, "User32.lib")
+
+bool debug_mode = false;
 
 HANDLE IsBluetoothEnabled()
 {
@@ -99,7 +102,10 @@ void ToogleBluetooth()
      enter_inputs[1].ki.wVk = VK_RETURN;
      enter_inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
 
-     SendInput(ARRAYSIZE(enter_inputs), enter_inputs, sizeof(INPUT));
+     if (!debug_mode)
+     {
+          SendInput(ARRAYSIZE(enter_inputs), enter_inputs, sizeof(INPUT));
+     }
 
      Sleep(1000);
 
@@ -116,8 +122,34 @@ void ToogleBluetooth()
      SendInput(ARRAYSIZE(close_submenu_inputs), close_submenu_inputs, sizeof(INPUT));
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+     bool skip_validation = false;
+
+     // Check for command-line options
+     for (int i = 1; i < argc; ++i)
+     {
+          if (strcmp(argv[i], "--skip-validation") == 0)
+          {
+               skip_validation = true;
+               cout << "Option detected: --skip-validation" << endl;
+          }
+          else if (strcmp(argv[i], "--debug") == 0)
+          {
+               debug_mode = true;
+               cout << "Option detected: --debug (Debug mode enabled)" << endl;
+          }
+     }
+
+     // If --skip-validation is provided, directly toggle Bluetooth
+     if (skip_validation)
+     {
+          cout << "Skipping validation and toggling Bluetooth..." << endl;
+          ToogleBluetooth();
+          return 0;
+     }
+
+     // Proceed with normal validation
      HANDLE handle_bluetooth = IsBluetoothEnabled();
 
      if (handle_bluetooth == NULL)
@@ -131,9 +163,10 @@ int main()
           cout << "No connected Bluetooth devices found. Exiting program." << endl;
           ToogleBluetooth();
           return 1;
-     };
+     }
 
      CloseHandle(handle_bluetooth);
 
      Sleep(2000);
+     return 0;
 }
