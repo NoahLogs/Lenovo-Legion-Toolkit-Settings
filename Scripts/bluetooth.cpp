@@ -9,22 +9,30 @@ using namespace std;
 #pragma comment(lib, "User32.lib")
 
 bool debug_mode = false;
+bool logging = false;
+
+// Logging function
+void Log(const string &message)
+{
+     if (logging)
+     {
+          cout << message << endl;
+     }
+}
 
 HANDLE IsBluetoothEnabled()
 {
-     // Look for the Bluetooth radio device
      HANDLE handle_bluetooth = NULL;
      BLUETOOTH_FIND_RADIO_PARAMS radio_finder_params = {sizeof(BLUETOOTH_FIND_RADIO_PARAMS)};
      HBLUETOOTH_RADIO_FIND handle_finder = BluetoothFindFirstRadio(&radio_finder_params, &handle_bluetooth);
 
-     // Validate if a radio device was found
      if (handle_finder == NULL)
      {
-          cout << "Bluetooth is disabled." << endl;
+          Log("Bluetooth is disabled.");
           return NULL;
      }
 
-     cout << "Bluetooth is enabled." << endl;
+     Log("Bluetooth is enabled.");
      return handle_bluetooth;
 }
 
@@ -32,7 +40,6 @@ bool CheckConnectedBluetoothDevices(HANDLE handle_bluetooth)
 {
      // Set the search parameters for Bluetooth devices
      BLUETOOTH_DEVICE_SEARCH_PARAMS search_params = {sizeof(BLUETOOTH_DEVICE_SEARCH_PARAMS)};
-
      search_params.hRadio = handle_bluetooth;
      search_params.fReturnConnected = TRUE;
      search_params.fReturnAuthenticated = FALSE;
@@ -49,17 +56,18 @@ bool CheckConnectedBluetoothDevices(HANDLE handle_bluetooth)
 
      if (device_finder == NULL)
      {
-          cout << "No connected Bluetooth devices found." << endl;
+          Log("No connected Bluetooth devices found.");
           return false;
      }
 
-     cout << "Connected Bluetooth device found." << endl;
+     Log("Connected Bluetooth device found.");
      return true;
 }
 
 void ToogleBluetooth()
 {
      // Press and realese Windows key + A key
+     Log("Toggling Bluetooth...");
      INPUT submenu_inputs[4] = {0};
 
      submenu_inputs[0].type = INPUT_KEYBOARD;
@@ -132,19 +140,23 @@ int main(int argc, char *argv[])
           if (strcmp(argv[i], "--skip-validation") == 0)
           {
                skip_validation = true;
-               cout << "Option detected: --skip-validation" << endl;
+               Log("Option detected: --skip-validation");
           }
           else if (strcmp(argv[i], "--debug") == 0)
           {
                debug_mode = true;
-               cout << "Option detected: --debug (Debug mode enabled)" << endl;
+               Log("Option detected: --debug (Debug mode enabled)");
+          }
+          else if (strcmp(argv[i], "--logging") == 0)
+          {
+               logging = true;
           }
      }
 
      // If --skip-validation is provided, directly toggle Bluetooth
      if (skip_validation)
      {
-          cout << "Skipping validation and toggling Bluetooth..." << endl;
+          Log("Skipping validation and toggling Bluetooth...");
           ToogleBluetooth();
           return 0;
      }
@@ -154,19 +166,18 @@ int main(int argc, char *argv[])
 
      if (handle_bluetooth == NULL)
      {
-          cout << "Exiting program." << endl;
+          Log("Exiting program.");
           return 1;
      }
 
      if (CheckConnectedBluetoothDevices(handle_bluetooth) == false)
      {
-          cout << "No connected Bluetooth devices found. Exiting program." << endl;
+          Log("No connected Bluetooth devices found. Exiting program.");
           ToogleBluetooth();
           return 1;
      }
 
      CloseHandle(handle_bluetooth);
 
-     Sleep(2000);
      return 0;
 }
